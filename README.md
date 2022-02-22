@@ -8,4 +8,7 @@ Requests
 
 ## Installation
 git clone git@github.com:aswarren/bvbrc_grab_features.git
+
+## Usage
+python ./genome_features.py ./data/small_test_gids.txt >output.fasta
 ```
