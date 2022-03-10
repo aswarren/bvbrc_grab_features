@@ -23,28 +23,37 @@ def pretty_print_POST(req):
 def chunker(seq, size):
     return (seq[pos:pos + size] for pos in range(0, len(seq), size))
 
-def genome_id_feature_gen(genome_ids, limit=2500000):
-    for gids in chunker(genome_ids, 10):
+def genome_id_feature_gen(genome_ids, limit=2500001):
+    for gids in chunker(genome_ids, 20):
+        batch=""
         selectors = ["eq(feature_type,CDS)","eq(annotation,PATRIC)","in(genome_id,({}))".format(','.join(gids))]
         genomes = "and({})".format(','.join(selectors))   
         limit = "limit({})".format(limit)
-        select = "sort(+genome_id,+sequence_id,+start)"
-        base = "https://www.patricbrc.org/api/genome_feature/"
+        #select = "sort(+genome_id,+sequence_id,+start,+feature_id)"
+        select = "sort(+feature_id)"
+        base = "https://www.patricbrc.org/api/genome_feature/?http_download=true"
+        #base = "http://localhost:3001/genome_feature/?http_download=true"
         query = "&".join([genomes, limit, select])
         headers = {"accept":"application/protein+fasta", "content-type": "application/rqlquery+x-www-form-urlencoded"}
 
+        r = requests.Request('POST', url=base, headers=headers, data=query)
+        prepared = r.prepare()
+        pretty_print_POST(prepared)
+        exit()
         #Stream the request so that we don't have to load it all into memory
-        r = requests.post(url=base, data=query, headers=headers, stream=True) 
-        #r = requests.Request('POST', url=base, headers=headers, data=query)
-        #prepared = r.prepare()
-        #pretty_print_POST(prepared)
-        #exit()
-        if r.encoding is None:
-            r.encoding = "utf-8"
-        if not r.ok:
-            logging.warning("Error in API request \n")
-        for line in r.iter_lines(decode_unicode=True):
-            yield line
+        with requests.post(url=base, data=query, headers=headers) as r:
+            if r.encoding is None:
+                r.encoding = "utf-8"
+            if not r.ok:
+                logging.warning("Error in API request \n")
+            batch_count=0
+            for line in r.iter_lines(decode_unicode=True):
+                batch+=line
+                if line.startswith(">"):
+                    batch_count+=1
+                    print(line)
+            logging.warning(f"batch count {batch_count}")
+            exit()
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("genome_id_files", type=str, nargs="*", default=["-"], help="Files with genome ids")
