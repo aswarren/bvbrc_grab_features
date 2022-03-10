@@ -23,8 +23,8 @@ def pretty_print_POST(req):
 def chunker(seq, size):
     return (seq[pos:pos + size] for pos in range(0, len(seq), size))
 
-def genome_id_feature_gen(genome_ids, limit=2500000):
-    for gids in chunker(genome_ids, 10):
+def genome_id_feature_gen(genome_ids, limit=25000):
+    for gids in chunker(genome_ids, 4):
         selectors = ["eq(feature_type,CDS)","eq(annotation,PATRIC)","in(genome_id,({}))".format(','.join(gids))]
         genomes = "and({})".format(','.join(selectors))   
         limit = "limit({})".format(limit)
