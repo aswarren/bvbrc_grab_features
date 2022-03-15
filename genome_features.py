@@ -34,7 +34,7 @@ def genome_id_feature_gen(genome_ids, limit=2500001):
         base = "https://www.patricbrc.org/api/genome_feature/?http_download=true"
         #base = "http://localhost:3001/genome_feature/?http_download=true"
         query = "&".join([genomes, limit, select])
-        headers = {"accept":"application/protein+fasta", "content-type": "application/rqlquery+x-www-form-urlencoded"}
+        headers = {"accept":"text/tsv", "content-type": "application/rqlquery+x-www-form-urlencoded"}
 
         #r = requests.Request('POST', url=base, headers=headers, data=query)
         #prepared = r.prepare()
@@ -49,8 +49,8 @@ def genome_id_feature_gen(genome_ids, limit=2500001):
             batch_count=0
             for line in r.iter_lines(decode_unicode=True):
                 batch+=line
-                if line.startswith(">"):
-                    batch_count+=1
+                #if line.startswith(">"):
+                batch_count+=1
             logging.warning(f"yielding batch for {','.join(gids)}")
             logging.warning(f"batch count {batch_count}")
         yield batch
