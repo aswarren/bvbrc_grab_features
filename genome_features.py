@@ -36,10 +36,10 @@ def genome_id_feature_gen(genome_ids, limit=2500001):
         query = "&".join([genomes, limit, select])
         headers = {"accept":"application/protein+fasta", "content-type": "application/rqlquery+x-www-form-urlencoded"}
 
-        r = requests.Request('POST', url=base, headers=headers, data=query)
-        prepared = r.prepare()
-        pretty_print_POST(prepared)
-        exit()
+        #r = requests.Request('POST', url=base, headers=headers, data=query)
+        #prepared = r.prepare()
+        #pretty_print_POST(prepared)
+        #exit()
         #Stream the request so that we don't have to load it all into memory
         with requests.post(url=base, data=query, headers=headers) as r:
             if r.encoding is None:
@@ -51,9 +51,9 @@ def genome_id_feature_gen(genome_ids, limit=2500001):
                 batch+=line
                 if line.startswith(">"):
                     batch_count+=1
-                    print(line)
+            logging.warning(f"yielding batch for {','.join(gids)}")
             logging.warning(f"batch count {batch_count}")
-            exit()
+        yield batch
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("genome_id_files", type=str, nargs="*", default=["-"], help="Files with genome ids")
