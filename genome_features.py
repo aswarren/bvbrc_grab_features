@@ -23,10 +23,12 @@ def pretty_print_POST(req):
 def chunker(seq, size):
     return (seq[pos:pos + size] for pos in range(0, len(seq), size))
 
-def genome_id_feature_gen(genome_ids, limit=2500001):
+def genome_id_feature_gen(genome_ids, genome_chunk, select_string=None, limit=2500001):
     total=0
-    for gids in chunker(genome_ids, 20):
+    for gids in chunker(genome_ids, genome_chunk):
         selectors = ["eq(feature_type,CDS)","gt(aa_length,0)","eq(annotation,PATRIC)","in(genome_id,({}))".format(','.join(gids))]
+        if select_string is not None:
+            selectors.append(select_string)
         genomes = "and({})".format(','.join(selectors))   
         limit = "limit({})".format(limit)
         #select = "sort(+genome_id,+sequence_id,+start,+feature_id)"
@@ -67,6 +69,8 @@ def genome_id_feature_gen(genome_ids, limit=2500001):
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("genome_id_files", type=str, nargs="*", default=["-"], help="Files with genome ids")
+    parser.add_argument("--genome_chunk", type=int, default=20, help="Number of genome ids to query at once")
+    parser.add_argument("--select_string", type=str, default=None, help="Additional query statement")
     if len(sys.argv) < 2:
         parser.print_help()
         sys.exit()
@@ -75,9 +79,9 @@ def main():
     for f in pargs.genome_id_files:
         with open(f,'r') as fh:
             for line in fh:
-                cur_ids=[i for i in re.split('; |, |,|\t|\n',line) if i]
+                cur_ids=[i.strip().replace('"','') for i in re.split('; |, |,|\t|\n',line) if i and i.strip() != "genome_id"]
                 genome_ids.extend(cur_ids)
-    for out_line in genome_id_feature_gen(genome_ids):
+    for out_line in genome_id_feature_gen(genome_ids, pargs.genome_chunk, pargs.select_string):
         print(out_line)
 
 if __name__ == "__main__":
